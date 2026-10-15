@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>FashionCommerce.Domain</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <!--
+    DOMAIN LAYER RULE:
+    This project must NEVER reference Application, Infrastructure, Persistence,
+    API, or any NuGet package that couples it to a framework (no EF Core,
+    no ASP.NET Identity, no MediatR here). It only depends on itself and
+    on FashionCommerce.Shared for pure cross-cutting primitives (e.g. Result<T>).
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\FashionCommerce.Shared\FashionCommerce.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

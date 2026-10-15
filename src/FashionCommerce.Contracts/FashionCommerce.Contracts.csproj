@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>FashionCommerce.Contracts</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    Pure DTOs (records) for API requests/responses. Zero business logic.
+    This project can later be packed as a NuGet package and shared with the
+    .NET MAUI mobile apps so they consume the exact same contract types.
+  -->
+
+</Project>
