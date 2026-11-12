@@ -25,13 +25,16 @@ public class GetVendorSalesTrendQueryHandler : IRequestHandler<GetVendorSalesTre
 
     public async Task<List<RevenueTrendPointDto>> Handle(GetVendorSalesTrendQuery request, CancellationToken cancellationToken)
     {
+        var fromDate = TrendBucketer.NormalizeUtc(request.FromDate);
+        var toDate = TrendBucketer.NormalizeUtc(request.ToDate);
+
         // Vendor earnings, not gross order total — a vendor's "sales" figure
         // should reflect what THEY earn (post-commission), not the full
         // customer-paid amount which includes the platform's cut.
         var items = await _context.OrderItems
             .Where(i => i.VendorId == request.VendorId)
             .Where(i => i.Status != OrderItemStatus.Cancelled)
-            .Where(i => i.CreatedAt >= request.FromDate && i.CreatedAt <= request.ToDate)
+            .Where(i => i.CreatedAt >= fromDate && i.CreatedAt <= toDate)
             .Select(i => new { i.CreatedAt, i.VendorEarning })
             .ToListAsync(cancellationToken);
 

@@ -13,7 +13,7 @@ public class SupportTicketConfiguration : IEntityTypeConfiguration<SupportTicket
         builder.Property(t => t.TicketNumber).IsRequired().HasMaxLength(30);
         builder.Property(t => t.Subject).IsRequired().HasMaxLength(300);
         builder.Property(t => t.Description).IsRequired().HasMaxLength(4000);
-        builder.Property(t => t.ClientContextJson).HasColumnType("nvarchar(max)");
+        builder.Property(t => t.ClientContextJson).HasColumnType("text");
         builder.Property(t => t.ResolutionNote).HasMaxLength(2000);
 
         builder.HasIndex(t => t.TicketNumber).IsUnique();

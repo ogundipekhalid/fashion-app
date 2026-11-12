@@ -13,7 +13,7 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
 
         builder.Property(n => n.Title).IsRequired().HasMaxLength(200);
         builder.Property(n => n.Body).IsRequired().HasMaxLength(1000);
-        builder.Property(n => n.MetadataJson).HasColumnType("nvarchar(max)");
+        builder.Property(n => n.MetadataJson).HasColumnType("text");
 
         builder.HasIndex(n => n.UserId);
         builder.HasIndex(n => n.IsRead);
@@ -29,7 +29,7 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
 
         builder.Property(a => a.Action).IsRequired().HasMaxLength(150);
         builder.Property(a => a.EntityName).IsRequired().HasMaxLength(100);
-        builder.Property(a => a.ChangesJson).HasColumnType("nvarchar(max)");
+        builder.Property(a => a.ChangesJson).HasColumnType("text");
         builder.Property(a => a.IpAddress).HasMaxLength(64);
         builder.Property(a => a.UserAgent).HasMaxLength(500);
 

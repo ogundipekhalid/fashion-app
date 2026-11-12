@@ -5,6 +5,7 @@ using FashionCommerce.Domain.Entities.Payouts;
 using FashionCommerce.Domain.Enums;
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace FashionCommerce.Application.Features.Auth.Commands.RegisterVendor;
 
@@ -42,15 +43,18 @@ public class RegisterVendorCommandHandler : IRequestHandler<RegisterVendorComman
     private readonly IApplicationDbContext _context;
     private readonly IIdentityService _identityService;
     private readonly IEmailTemplateService _emailTemplateService;
+    private readonly ILogger<RegisterVendorCommandHandler>? _logger;
 
     public RegisterVendorCommandHandler(
         IApplicationDbContext context,
         IIdentityService identityService,
-        IEmailTemplateService emailTemplateService)
+        IEmailTemplateService emailTemplateService,
+        ILogger<RegisterVendorCommandHandler>? logger = null)
     {
         _context = context;
         _identityService = identityService;
         _emailTemplateService = emailTemplateService;
+        _logger = logger;
     }
 
     public async Task<Result<RegisterVendorResponse>> Handle(RegisterVendorCommand request, CancellationToken cancellationToken)
@@ -89,7 +93,15 @@ public class RegisterVendorCommandHandler : IRequestHandler<RegisterVendorComman
 
         var token = await _identityService.GenerateEmailConfirmationTokenAsync(identityUserId);
         var verificationLink = $"https://app.fashioncommerce.dev/verify-email?userId={identityUserId}&token={Uri.EscapeDataString(token)}";
-        await _emailTemplateService.SendEmailVerificationAsync(request.Email, vendor.BusinessName, verificationLink, cancellationToken);
+
+        try
+        {
+            await _emailTemplateService.SendEmailVerificationAsync(request.Email, vendor.BusinessName, verificationLink, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Vendor account {VendorId} was created, but its verification email could not be sent", vendor.Id);
+        }
 
         return Result<RegisterVendorResponse>.Success(
             new RegisterVendorResponse(vendor.Id, vendor.ContactEmail, vendor.VerificationStatus.ToString()));

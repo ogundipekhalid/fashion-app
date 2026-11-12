@@ -82,6 +82,12 @@ public class IdentityService : IIdentityService
         return result.Succeeded ? Result.Success() : Result.Failure(result.Errors.Select(e => e.Description));
     }
 
+    public async Task<bool> IsEmailConfirmedAsync(Guid identityUserId)
+    {
+        var user = await _userManager.FindByIdAsync(identityUserId.ToString());
+        return user is not null && await _userManager.IsEmailConfirmedAsync(user);
+    }
+
     public async Task<string> GenerateEmailConfirmationTokenAsync(Guid identityUserId)
     {
         var user = await _userManager.FindByIdAsync(identityUserId.ToString())

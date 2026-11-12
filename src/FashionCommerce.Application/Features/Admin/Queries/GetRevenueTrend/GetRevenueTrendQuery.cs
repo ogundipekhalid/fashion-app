@@ -27,13 +27,16 @@ public class GetRevenueTrendQueryHandler : IRequestHandler<GetRevenueTrendQuery,
 
     public async Task<List<RevenueTrendPointDto>> Handle(GetRevenueTrendQuery request, CancellationToken cancellationToken)
     {
+        var fromDate = TrendBucketer.NormalizeUtc(request.FromDate);
+        var toDate = TrendBucketer.NormalizeUtc(request.ToDate);
+
         // Deliberately pulled into memory before grouping: date-truncation
         // functions (DATEPART/DATE_TRUNC) don't translate identically across
         // EF Core providers, and the raw row count for a revenue-trend
         // window (days to a few months of orders) is small enough that
         // in-memory grouping is simpler and more portable than provider-specific SQL.
         var orders = await _context.Orders
-            .Where(o => o.PlacedAt >= request.FromDate && o.PlacedAt <= request.ToDate)
+            .Where(o => o.PlacedAt >= fromDate && o.PlacedAt <= toDate)
             .Where(o => o.PaymentStatus == PaymentStatus.Successful || o.PaymentStatus == PaymentStatus.PartiallyRefunded)
             .Select(o => new { o.PlacedAt, o.Total })
             .ToListAsync(cancellationToken);
@@ -45,6 +48,13 @@ public class GetRevenueTrendQueryHandler : IRequestHandler<GetRevenueTrendQuery,
 /// <summary>Shared bucketing logic between the Admin revenue trend and the Vendor sales trend — same grouping rules, different data source.</summary>
 internal static class TrendBucketer
 {
+    public static DateTime NormalizeUtc(DateTime value) => value.Kind switch
+    {
+        DateTimeKind.Utc => value,
+        DateTimeKind.Local => value.ToUniversalTime(),
+        _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+    };
+
     public static List<RevenueTrendPointDto> Bucket(IEnumerable<(DateTime PlacedAt, decimal Total)> rows, TrendGranularity granularity)
     {
         return rows
@@ -58,7 +68,7 @@ internal static class TrendBucketer
     {
         TrendGranularity.Daily => date.Date,
         TrendGranularity.Weekly => date.Date.AddDays(-(int)date.DayOfWeek), // start of week (Sunday)
-        TrendGranularity.Monthly => new DateTime(date.Year, date.Month, 1),
+        TrendGranularity.Monthly => DateTime.SpecifyKind(new DateTime(date.Year, date.Month, 1), DateTimeKind.Utc),
         _ => date.Date
     };
 

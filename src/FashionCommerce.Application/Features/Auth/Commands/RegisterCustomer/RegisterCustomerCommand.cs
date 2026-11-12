@@ -4,6 +4,7 @@ using FashionCommerce.Domain.Entities.Identity;
 using FashionCommerce.Domain.Enums;
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace FashionCommerce.Application.Features.Auth.Commands.RegisterCustomer;
 
@@ -47,15 +48,18 @@ public class RegisterCustomerCommandHandler : IRequestHandler<RegisterCustomerCo
     private readonly IApplicationDbContext _context;
     private readonly IIdentityService _identityService;
     private readonly IEmailTemplateService _emailTemplateService;
+    private readonly ILogger<RegisterCustomerCommandHandler>? _logger;
 
     public RegisterCustomerCommandHandler(
         IApplicationDbContext context,
         IIdentityService identityService,
-        IEmailTemplateService emailTemplateService)
+        IEmailTemplateService emailTemplateService,
+        ILogger<RegisterCustomerCommandHandler>? logger = null)
     {
         _context = context;
         _identityService = identityService;
         _emailTemplateService = emailTemplateService;
+        _logger = logger;
     }
 
     public async Task<Result<RegisterCustomerResponse>> Handle(RegisterCustomerCommand request, CancellationToken cancellationToken)
@@ -84,7 +88,14 @@ public class RegisterCustomerCommandHandler : IRequestHandler<RegisterCustomerCo
 
         var token = await _identityService.GenerateEmailConfirmationTokenAsync(identityUserId);
         var verificationLink = $"https://app.fashioncommerce.dev/verify-email?userId={identityUserId}&token={Uri.EscapeDataString(token)}";
-        await _emailTemplateService.SendEmailVerificationAsync(request.Email, customer.FullName, verificationLink, cancellationToken);
+        try
+        {
+            await _emailTemplateService.SendEmailVerificationAsync(request.Email, customer.FullName, verificationLink, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Customer account {CustomerId} was created, but its verification email could not be sent", customer.Id);
+        }
 
         return Result<RegisterCustomerResponse>.Success(new RegisterCustomerResponse(customer.Id, customer.Email));
     }

@@ -13,7 +13,7 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.Property(p => p.ProviderReference).IsRequired().HasMaxLength(200);
         builder.Property(p => p.Currency).IsRequired().HasMaxLength(3);
         builder.Property(p => p.FailureReason).HasMaxLength(500);
-        builder.Property(p => p.RawResponseJson).HasColumnType("nvarchar(max)");
+        builder.Property(p => p.RawResponseJson).HasColumnType("text");
         builder.Property(p => p.Amount).HasPrecision(18, 2);
 
         builder.HasIndex(p => p.ProviderReference).IsUnique();
@@ -34,7 +34,7 @@ public class PaymentWebhookLogConfiguration : IEntityTypeConfiguration<PaymentWe
 
         builder.Property(w => w.ProviderEventId).IsRequired().HasMaxLength(200);
         builder.Property(w => w.EventType).IsRequired().HasMaxLength(100);
-        builder.Property(w => w.PayloadJson).IsRequired().HasColumnType("nvarchar(max)");
+        builder.Property(w => w.PayloadJson).IsRequired().HasColumnType("text");
 
         // Idempotency: never process the same provider event twice.
         builder.HasIndex(w => new { w.Provider, w.ProviderEventId }).IsUnique();

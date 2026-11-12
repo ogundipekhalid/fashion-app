@@ -56,25 +56,50 @@ public static class DataSeeder
         var email = configuration["Seed:SuperAdminEmail"] ?? "superadmin@fashioncommerce.dev";
         var password = configuration["Seed:SuperAdminPassword"] ?? "ChangeMe123!";
 
-        if (await userManager.FindByEmailAsync(email) is not null) return;
+        var identityUser = await userManager.FindByEmailAsync(email);
+        var existingAdmin = await context.Admins.SingleOrDefaultAsync(admin => admin.Email == email);
 
-        var identityUser = new ApplicationIdentityUser
+        if (existingAdmin is not null)
         {
-            Id = Guid.NewGuid(),
-            UserName = email,
-            Email = email,
-            EmailConfirmed = true, // seeded account skips the email verification flow
-            CreatedAt = DateTime.UtcNow
-        };
+            if (identityUser is null || existingAdmin.IdentityUserId != identityUser.Id)
+            {
+                logger.LogError(
+                    "Cannot seed SuperAdmin: an Admin record with email {Email} already exists but is not linked to the matching Identity user.",
+                    email);
+                return;
+            }
 
-        var result = await userManager.CreateAsync(identityUser, password);
-        if (!result.Succeeded)
-        {
-            logger.LogWarning("Failed to seed SuperAdmin: {Errors}", string.Join("; ", result.Errors.Select(e => e.Description)));
             return;
         }
 
-        await userManager.AddToRoleAsync(identityUser, ApplicationRoles.SuperAdmin);
+        if (identityUser is null)
+        {
+            identityUser = new ApplicationIdentityUser
+            {
+                Id = Guid.NewGuid(),
+                UserName = email,
+                Email = email,
+                EmailConfirmed = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var createResult = await userManager.CreateAsync(identityUser, password);
+            if (!createResult.Succeeded)
+            {
+                logger.LogWarning("Failed to seed SuperAdmin: {Errors}", string.Join("; ", createResult.Errors.Select(e => e.Description)));
+                return;
+            }
+        }
+
+        if (!await userManager.IsInRoleAsync(identityUser, ApplicationRoles.SuperAdmin))
+        {
+            var roleResult = await userManager.AddToRoleAsync(identityUser, ApplicationRoles.SuperAdmin);
+            if (!roleResult.Succeeded)
+            {
+                logger.LogWarning("Failed to assign the SuperAdmin role: {Errors}", string.Join("; ", roleResult.Errors.Select(e => e.Description)));
+                return;
+            }
+        }
 
         context.Admins.Add(new Admin
         {

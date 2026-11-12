@@ -6,6 +6,7 @@ using FashionCommerce.Application.Features.Auth.Commands.Logout;
 using FashionCommerce.Application.Features.Auth.Commands.RefreshToken;
 using FashionCommerce.Application.Features.Auth.Commands.RegisterCustomer;
 using FashionCommerce.Application.Features.Auth.Commands.RegisterVendor;
+using FashionCommerce.Application.Features.Auth.Commands.ResendVerificationEmail;
 using FashionCommerce.Application.Features.Auth.Commands.ResetPassword;
 using FashionCommerce.Application.Features.Auth.Commands.VerifyEmail;
 using Microsoft.AspNetCore.Authorization;
@@ -61,6 +62,12 @@ public class AuthController : ApiControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> VerifyEmail(VerifyEmailCommand command) =>
         FromResult(await Mediator.Send(command), "Email verified successfully.");
+
+    /// <summary>Generates and sends a fresh verification link to an unverified account.</summary>
+    [HttpPost("resend-verification-email")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResendVerificationEmail(ResendVerificationEmailCommand command) =>
+        FromResult(await Mediator.Send(command), "If the account exists and is unverified, a new verification email has been sent.");
 
     /// <summary>Changes the currently authenticated user's password.</summary>
     [HttpPost("change-password")]

@@ -27,7 +27,7 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
             ?? "Server=localhost;Database=FashionCommerceDb;Trusted_Connection=True;TrustServerCertificate=True;";
 
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-        optionsBuilder.UseSqlServer(connectionString, sql =>
+        optionsBuilder.UseNpgsql(connectionString, sql =>
             sql.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
 
         return new ApplicationDbContext(optionsBuilder.Options);

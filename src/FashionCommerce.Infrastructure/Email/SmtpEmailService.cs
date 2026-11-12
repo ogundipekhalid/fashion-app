@@ -9,6 +9,7 @@ public class SmtpSettings
 {
     public const string SectionName = "Email";
 
+    public bool Enabled { get; set; } = true;
     public string SmtpHost { get; set; } = default!;
     public int SmtpPort { get; set; } = 587;
     public string FromAddress { get; set; } = default!;
@@ -33,6 +34,18 @@ public class SmtpEmailService : IEmailService
 
     public async Task SendAsync(string toEmail, string subject, string htmlBody, CancellationToken cancellationToken = default)
     {
+        if (!_settings.Enabled)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_settings.SmtpHost) ||
+            string.IsNullOrWhiteSpace(_settings.Username) ||
+            string.IsNullOrWhiteSpace(_settings.Password) ||
+            _settings.Username.Equals("xxx", StringComparison.OrdinalIgnoreCase) ||
+            _settings.Password.Equals("xxx", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Email is enabled but SMTP configuration is incomplete. Configure Email settings in appsettings.Development.json or environment variables.");
+        }
+
         using var message = new MailMessage
         {
             From = new MailAddress(_settings.FromAddress, "FashionCommerce"),

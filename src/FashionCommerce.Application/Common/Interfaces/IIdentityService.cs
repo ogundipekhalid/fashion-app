@@ -19,6 +19,7 @@ public interface IIdentityService
     Task<CredentialCheckResult> CheckPasswordAsync(string email, string password);
 
     Task<Result> ConfirmEmailAsync(Guid identityUserId, string token);
+    Task<bool> IsEmailConfirmedAsync(Guid identityUserId);
     Task<string> GenerateEmailConfirmationTokenAsync(Guid identityUserId);
 
     Task<string> GeneratePasswordResetTokenAsync(Guid identityUserId);

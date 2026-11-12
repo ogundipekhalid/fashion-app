@@ -20,10 +20,10 @@ public static class DependencyInjection
 
         services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
-            options.UseSqlServer(connectionString, sql =>
+            options.UseNpgsql(connectionString, sql =>
             {
                 sql.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName);
-                sql.EnableRetryOnFailure(3); // transient SQL Server fault tolerance
+                sql.EnableRetryOnFailure(3); // transient PostgreSQL fault tolerance
             });
 
             options.AddInterceptors(sp.GetRequiredService<AuditableEntitySaveChangesInterceptor>());

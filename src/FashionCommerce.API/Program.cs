@@ -13,7 +13,12 @@ using Hangfire;
 using Microsoft.OpenApi.Models;
 using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+// var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = AppContext.BaseDirectory
+});
 
 // Serilog: request/error/performance logging (see LOGGING requirement in spec)
 Log.Logger = new LoggerConfiguration()

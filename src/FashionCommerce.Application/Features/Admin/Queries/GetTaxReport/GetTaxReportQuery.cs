@@ -2,6 +2,7 @@ using FashionCommerce.Application.Common.Interfaces;
 using FashionCommerce.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using FashionCommerce.Application.Features.Admin.Queries.GetRevenueTrend;
 
 namespace FashionCommerce.Application.Features.Admin.Queries.GetTaxReport;
 
@@ -26,8 +27,10 @@ public class GetTaxReportQueryHandler : IRequestHandler<GetTaxReportQuery, TaxRe
 
     public async Task<TaxReportDto> Handle(GetTaxReportQuery request, CancellationToken cancellationToken)
     {
+        var fromDate = TrendBucketer.NormalizeUtc(request.FromDate);
+        var toDate = TrendBucketer.NormalizeUtc(request.ToDate);
         var orders = await _context.Orders
-            .Where(o => o.PlacedAt >= request.FromDate && o.PlacedAt <= request.ToDate)
+            .Where(o => o.PlacedAt >= fromDate && o.PlacedAt <= toDate)
             .Where(o => o.PaymentStatus == PaymentStatus.Successful || o.PaymentStatus == PaymentStatus.PartiallyRefunded)
             .Select(o => new { o.Subtotal, o.TaxAmount })
             .ToListAsync(cancellationToken);
@@ -36,6 +39,6 @@ public class GetTaxReportQueryHandler : IRequestHandler<GetTaxReportQuery, TaxRe
         var totalTax = orders.Sum(o => o.TaxAmount);
         var effectiveRate = totalSubtotal > 0 ? Math.Round(totalTax / totalSubtotal * 100m, 2) : 0m;
 
-        return new TaxReportDto(request.FromDate, request.ToDate, orders.Count, totalSubtotal, totalTax, effectiveRate);
+        return new TaxReportDto(fromDate, toDate, orders.Count, totalSubtotal, totalTax, effectiveRate);
     }
 }
